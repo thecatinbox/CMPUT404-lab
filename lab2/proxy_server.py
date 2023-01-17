@@ -1,4 +1,5 @@
 import socket
+from threading import Thread
 
 # Proxy server recieves message and sends it to another server
 BYTES_TO_READ = 4096 
@@ -47,4 +48,17 @@ def start_server():
         conn, addr = server_socket.accept()
         handle_connection(conn, addr) 
 
-print(start_server())
+def start_thread_server(): 
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind((PROXY_SERVER_HOST, PROXY_SERVER_PORT))  
+        
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_socket.listen(2) # check for 2 connections, add a queue to the server to handle more than 1 connections 
+        
+        while True: 
+            conn, addr = server_socket.accept()
+            thread = Thread(target=handle_connection, args=(conn, addr))
+            thread.run() 
+
+# print(start_server())
+start_thread_server() 
